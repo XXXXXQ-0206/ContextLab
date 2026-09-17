@@ -98,8 +98,13 @@ natural modern Chinese, not a literal translation of the English.
 ## License / 许可
 
 By contributing you agree that your contribution is dual-licensed under the Apache License 2.0 or
-the MIT license, at the user's option, as described in `LICENSE`, `LICENSE-APACHE`, and
-`LICENSE-MIT`. This matches the `license` field already declared in `Cargo.toml`.
+the MIT license, at the user's option, as described in `LICENSE-APACHE` and `LICENSE-MIT`. This
+matches the `license` field already declared in `Cargo.toml`.
 
-提交贡献即表示你同意该贡献按 `LICENSE`、`LICENSE-APACHE` 与 `LICENSE-MIT` 所述，以 Apache License 2.0 或 MIT license 双许可方式授权，
-使用者可任选其一。这与 `Cargo.toml` 中已声明的 `license` 字段一致。
+The repository intentionally carries the two full license texts instead of one combined `LICENSE`
+file, because that is the layout GitHub and the Rust ecosystem recognise as a dual-licensed project.
+
+提交贡献即表示你同意该贡献按 `LICENSE-APACHE` 与 `LICENSE-MIT` 所述，以 Apache License 2.0 或 MIT license
+双许可方式授权，使用者可任选其一。这与 `Cargo.toml` 中已声明的 `license` 字段一致。
+
+仓库刻意保留两份完整许可文本，而不合并成单个 `LICENSE` 文件，因为这是 GitHub 与 Rust 生态识别"双许可项目"的布局。
