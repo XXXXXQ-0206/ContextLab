@@ -1,0 +1,15 @@
+[package]
+name = "contextlab-desktop-tauri-staging"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0 OR MIT"
+description = "ContextLab Tauri adapter staging shell."
+publish = false
+
+[dependencies]
+contextlab-adapter-contract = { path = "../../cli/crates/contextlab-adapter-contract" }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"

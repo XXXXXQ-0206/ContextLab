@@ -1,0 +1,28 @@
+[package]
+name = "contextlab-auth"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Authentication and authorization domain contracts for ContextLab."
+
+[dependencies]
+async-trait.workspace = true
+contextlab-context-core = { path = "../context-core" }
+jsonwebtoken.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+base64 = "0.22.1"
+rand = "0.8.5"
+rsa = "0.9.8"
+tokio.workspace = true
+
+[lints]
+workspace = true

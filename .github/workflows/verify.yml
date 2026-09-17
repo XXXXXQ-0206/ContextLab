@@ -1,0 +1,111 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.14-alpine
+        env:
+          POSTGRES_DB: contextlab_test
+          POSTGRES_USER: contextlab_test_runner
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d contextlab_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CONTEXTLAB_TEST_DATABASE_URL: postgres://contextlab_test_runner:postgres@localhost:5432/contextlab_test
+      CONTEXTLAB_TEST_DATABASE_NAME: contextlab_test
+      CONTEXTLAB_TEST_DATABASE_ROLE: contextlab_test_runner
+      CONTEXTLAB_ALLOW_DISPOSABLE_DATABASE_RESET: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: clippy, rustfmt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: bash scripts/verify-ci-evidence-artifact.test.sh
+      - run: bash scripts/write-production-rehearsal-evidence.test.sh
+      - run: sudo apt-get update
+      - run: sudo apt-get install --yes postgresql-client-16
+      - run: cargo fmt --all -- --check
+      - run: cargo test --workspace
+      - run: bash scripts/verify-disposable-postgres-storage.sh
+      - run: psql postgres://contextlab_test_runner:postgres@localhost:5432/postgres -X -v ON_ERROR_STOP=1 -c 'CREATE DATABASE contextlab_rehearsal'
+      - run: bash scripts/verify-production-migration-rehearsal.sh
+        env:
+          CONTEXTLAB_REHEARSAL_DATABASE_URL: postgres://contextlab_test_runner:postgres@localhost:5432/contextlab_rehearsal
+          CONTEXTLAB_REHEARSAL_DATABASE_NAME: contextlab_rehearsal
+          CONTEXTLAB_REHEARSAL_DATABASE_ROLE: contextlab_test_runner
+          CONTEXTLAB_ALLOW_REHEARSAL_DATABASE_RESET: "1"
+      - run: pnpm check:web
+      - name: Capture CI evidence
+        if: ${{ success() }}
+        shell: bash
+        run: |
+          evidence_dir=".ci-evidence"
+          mkdir -p "$evidence_dir"
+          checked_out_commit_sha="$(git rev-parse --verify HEAD^{commit})"
+          provider_head_sha="${GITHUB_SHA:?GITHUB_SHA is required}"
+
+          if [[ "$checked_out_commit_sha" != "$provider_head_sha" ]]; then
+            printf 'checked-out commit does not match GITHUB_SHA\n' >&2
+            exit 1
+          fi
+
+          workflow_path=".github/workflows/verify.yml"
+          workflow_sha256="$(sha256sum "$workflow_path" | awk '{print $1}')"
+          generated_at_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          cat > "$evidence_dir/verification-evidence.txt" <<EOF
+          schema_version=ci-evidence-capture.v1
+          provider=github-actions
+          checked_out_commit_sha=$checked_out_commit_sha
+          provider_head_sha=$provider_head_sha
+          workflow_path=$workflow_path
+          workflow_sha256=$workflow_sha256
+          generated_at_utc=$generated_at_utc
+          capture_scope=successful-verify-job-provenance-only
+          redaction_statement=no-environment-values-credentials-or-raw-logs
+          EOF
+
+          sha256sum "$evidence_dir/verification-evidence.txt" > "$evidence_dir/verification-evidence.txt.sha256"
+      - name: Upload CI evidence
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: contextlab-ci-evidence
+          path: .ci-evidence/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Capture rehearsal technical evidence
+        if: ${{ success() }}
+        shell: bash
+        run: |
+          evidence_dir=".rehearsal-evidence"
+          mkdir -p "$evidence_dir"
+          bash scripts/write-production-rehearsal-evidence.sh "$evidence_dir/production-rehearsal-evidence.txt"
+          sha256sum "$evidence_dir/production-rehearsal-evidence.txt" > "$evidence_dir/production-rehearsal-evidence.txt.sha256"
+      - name: Upload rehearsal technical evidence
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: contextlab-rehearsal-evidence
+          path: .rehearsal-evidence/
+          retention-days: 90
+          if-no-files-found: error

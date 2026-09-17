@@ -1,0 +1,17 @@
+[package]
+name = "contextlab-adapter-contract"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0 OR MIT"
+description = "Typed staging contract between ContextLab presentation adapters and shared application crates."
+publish = false
+
+[dependencies]
+contextlab-versioning = { path = "../../../../crates/versioning" }
+serde.workspace = true
+serde_json.workspace = true
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"

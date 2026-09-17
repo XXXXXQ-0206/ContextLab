@@ -1,0 +1,19 @@
+[package]
+name = "contextlab-versioning"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Git-like versioning primitives for ContextLab contexts."
+
+[dependencies]
+chrono.workspace = true
+contextlab-context-core = { path = "../context-core" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+
+[lints]
+workspace = true

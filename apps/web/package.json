@@ -1,0 +1,32 @@
+{
+  "name": "@contextlab/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "lint": "tsc --noEmit",
+    "test": "tsx --test \"src/app/**/*.test.ts\" \"src/app/**/*.test.tsx\""
+  },
+  "dependencies": {
+    "@contextlab/design-system": "workspace:*",
+    "@contextlab/local-sdk": "workspace:*",
+    "@contextlab/ts-sdk": "workspace:*",
+    "@contextlab/ui": "workspace:*",
+    "@tailwindcss/postcss": "4.3.2",
+    "clsx": "2.1.1",
+    "lucide-react": "1.23.0",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "tailwindcss": "4.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}

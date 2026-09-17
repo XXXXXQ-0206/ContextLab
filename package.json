@@ -1,0 +1,13 @@
+{
+  "name": "contextlab",
+  "private": true,
+  "packageManager": "pnpm@10.12.2",
+  "scripts": {
+    "dev:api": "cargo run -p contextlab-api",
+    "dev:web": "pnpm --filter @contextlab/web dev",
+    "test": "cargo test --workspace",
+    "check": "pnpm check:rust && pnpm check:web",
+    "check:rust": "cargo fmt --all -- --check && cargo test --workspace",
+    "check:web": "pnpm --filter @contextlab/ts-sdk lint && pnpm --filter @contextlab/ts-sdk test && pnpm --filter @contextlab/local-sdk lint && pnpm --filter @contextlab/local-sdk test && pnpm --filter @contextlab/web lint && pnpm --filter @contextlab/web test && pnpm --filter @contextlab/web build"
+  }
+}

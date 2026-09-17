@@ -1,0 +1,24 @@
+[package]
+name = "contextlab-knowledge"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Provider-free knowledge ingestion, chunking, retrieval, and citation contracts for ContextLab."
+
+[dependencies]
+contextlab-context-core = { path = "../context-core" }
+contextlab-embedding = { path = "../embedding" }
+contextlab-memory = { path = "../memory" }
+contextlab-mcp = { path = "../mcp" }
+serde.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

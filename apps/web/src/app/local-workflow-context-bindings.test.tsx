@@ -130,7 +130,9 @@ test("binding inspector is anchored to the selected exact commit and never subst
     })
   };
 
-  const markup = renderToStaticMarkup(<LocalWorkflowContextBindingsScreen resource={resource} />);
+  const markup = renderToStaticMarkup(
+    <LocalWorkflowContextBindingsScreen view={presentLocalWorkflowContextBindings(resource)} />
+  );
 
   assert.equal(resource.target.commit_id, selectedCommit.id);
   assert.equal(resource.summary.commit_id, selectedCommit.id);
@@ -199,7 +201,9 @@ test("local Workflow binding data adapts loading, error, empty, available, and u
   for (const { expectedState, resource } of cases) {
     const dto = adaptLocalWorkflowContextBindingsV1(resource);
     const view = presentLocalWorkflowContextBindings(resource);
-    const markup = renderToStaticMarkup(<LocalWorkflowContextBindingsScreen resource={resource} />);
+    const markup = renderToStaticMarkup(
+      <LocalWorkflowContextBindingsScreen view={view} />
+    );
 
     assert.equal(dto.state, expectedState);
     assert.equal(view.status.state, expectedState);
@@ -254,6 +258,8 @@ test("binding inspector starts as an accessible empty read for the exact selecte
   assert.match(markup, /disabled=""/);
   assert.match(markup, /<select[^>]*disabled=""[^>]*name="workflow-context-bindings-selected-binding"/);
   assert.match(markup, /<input[^>]*disabled=""[^>]*name="workflow-context-bindings-workflow-run-id"/);
+  assert.match(markup, /<input[^>]*required=""[^>]*name="workflow-context-bindings-workflow-run-id"/);
+  assert.match(markup, /<input[^>]*aria-required="true"[^>]*name="workflow-context-bindings-workflow-run-id"/);
   assert.match(markup, /Inspect run status \/ 审阅运行状态/);
   assert.doesNotMatch(markup, /preview-commit|current-head|raw workflow/i);
 });
@@ -290,6 +296,7 @@ test("binding inspector performs an exact BFF read and projects the redacted rea
       "/api/local/contexts/context%2Fid/commits/commit%2F042/workflow-bindings"
     ]);
     assert.deepEqual(requests[0]?.init, {
+      method: "GET",
       headers: {
         accept: "application/json",
         authorization: "Bearer request-token"
@@ -302,16 +309,14 @@ test("binding inspector performs an exact BFF read and projects the redacted rea
       element.type === LocalWorkflowContextBindingsScreen
     );
     assert.ok(screen);
-    const resource = screen.props.resource as LocalWorkflowContextBindingsResource;
-    assert.equal(resource.kind, "ready");
-    if (resource.kind === "ready") {
-      assert.equal(resource.summary.context_id, "context/id");
-      assert.equal(resource.summary.commit_id, "commit/042");
-      assert.deepEqual(resource.summary.bindings, [binding]);
-      const markup = renderToStaticMarkup(<LocalWorkflowContextBindingsScreen resource={resource} />);
-      assert.match(markup, /binding-001/);
-      assert.match(markup, /workflow-001/);
-    }
+    const view = screen.props.view as ReturnType<typeof presentLocalWorkflowContextBindings>;
+    assert.equal(view.status.state, "available");
+    assert.equal(view.scope[0]?.value, "context/id");
+    assert.equal(view.scope[1]?.value, "commit/042");
+    assert.deepEqual(view.rows.map((row) => row.bindingId), [binding.binding_id]);
+    const markup = renderToStaticMarkup(<LocalWorkflowContextBindingsScreen view={view} />);
+    assert.match(markup, /binding-001/);
+    assert.match(markup, /workflow-001/);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -535,6 +540,70 @@ test("binding inspector fails closed when status response scope drifts", async (
   }
 });
 
+test("binding inspector maps a missing workflow run to the empty state", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    if (String(input).endsWith("/workflow-bindings")) {
+      return new Response(JSON.stringify({
+        schema_version: LOCAL_WORKFLOW_CONTEXT_BINDINGS_SCHEMA_V1,
+        context_id: executionContextId,
+        commit_id: executionCommitId,
+        bindings: [executionBinding]
+      }), { headers: { "content-type": "application/json" } });
+    }
+    return new Response(JSON.stringify({
+      error: "workflow_execution_status_not_found",
+      message: "private upstream detail"
+    }), { status: 404, headers: { "content-type": "application/json" } });
+  }) as typeof fetch;
+
+  try {
+    const harness = createWorkflowBindingsInspectorHarness(executionCommitId, executionContextId);
+    changeWorkflowInspector(harness, "request-token");
+    const bindingsButton = findElement(harness.tree, (element) =>
+      typeof element.props.onClick === "function"
+      && textContent(element.props.children as React.ReactNode).includes("Inspect bindings")
+    );
+    assert.ok(bindingsButton);
+    await (bindingsButton.props.onClick as () => Promise<void>)();
+    harness.render();
+
+    const bindingSelect = findElement(harness.tree, (element) =>
+      element.props.name === "workflow-context-bindings-selected-binding"
+    );
+    assert.ok(bindingSelect);
+    (bindingSelect.props.onChange as (event: { target: { value: string } }) => void)({
+      target: { value: executionBinding.binding_id }
+    });
+    const runInput = findElement(harness.tree, (element) =>
+      element.props.name === "workflow-context-bindings-workflow-run-id"
+    );
+    assert.ok(runInput);
+    (runInput.props.onChange as (event: { target: { value: string } }) => void)({
+      target: { value: executionRunId }
+    });
+    harness.render();
+    const statusButton = findElement(harness.tree, (element) =>
+      typeof element.props.onClick === "function"
+      && textContent(element.props.children as React.ReactNode).includes("Inspect run status")
+    );
+    assert.ok(statusButton);
+    await (statusButton.props.onClick as () => Promise<void>)();
+    harness.render();
+
+    const screen = findElement(harness.tree, (element) =>
+      element.type === LocalWorkflowExecutionStatusScreen
+    );
+    assert.ok(screen);
+    const resource = screen.props.resource as { kind: string };
+    assert.equal(resource.kind, "empty");
+    assert.doesNotMatch(textContent(harness.tree), /private upstream detail/);
+    assert.equal(findElement(harness.tree, (element) => element.props.role === "alert"), undefined);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("binding inspector preserves the selected commit and exposes a typed failure state", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () => new Response(
@@ -558,10 +627,10 @@ test("binding inspector preserves the selected commit and exposes a typed failur
       element.type === LocalWorkflowContextBindingsScreen
     );
     assert.ok(screen);
-    const resource = screen.props.resource as LocalWorkflowContextBindingsResource;
-    assert.equal(resource.kind, "error");
-    assert.equal(resource.target.context_id, "context/id");
-    assert.equal(resource.target.commit_id, "commit/042");
+    const view = screen.props.view as ReturnType<typeof presentLocalWorkflowContextBindings>;
+    assert.equal(view.status.state, "error");
+    assert.equal(view.scope[0]?.value, "context/id");
+    assert.equal(view.scope[1]?.value, "commit/042");
 
     const notice = findElement(harness.tree, (element) => element.props.role === "alert");
     assert.ok(notice);
@@ -595,10 +664,10 @@ test("binding inspector maps service unavailability to the shared unavailable st
       element.type === LocalWorkflowContextBindingsScreen
     );
     assert.ok(screen);
-    const resource = screen.props.resource as LocalWorkflowContextBindingsResource;
-    assert.equal(resource.kind, "unavailable");
-    assert.equal(resource.target.context_id, "context/id");
-    assert.equal(resource.target.commit_id, "commit/042");
+    const view = screen.props.view as ReturnType<typeof presentLocalWorkflowContextBindings>;
+    assert.equal(view.status.state, "unavailable");
+    assert.equal(view.scope[0]?.value, "context/id");
+    assert.equal(view.scope[1]?.value, "commit/042");
 
     const notice = findElement(harness.tree, (element) => element.props.role === "alert");
     assert.ok(notice);
@@ -644,9 +713,9 @@ test("binding inspector ignores a late response from the previously selected com
       element.type === LocalWorkflowContextBindingsScreen
     );
     assert.ok(screen);
-    const resource = screen.props.resource as LocalWorkflowContextBindingsResource;
-    assert.equal(resource.kind, "empty");
-    assert.equal(resource.target.commit_id, "commit-new");
+    const view = screen.props.view as ReturnType<typeof presentLocalWorkflowContextBindings>;
+    assert.equal(view.status.state, "empty");
+    assert.equal(view.scope[1]?.value, "commit-new");
     assert.doesNotMatch(textContent(screen), /commit-old|binding-001/);
   } finally {
     globalThis.fetch = originalFetch;

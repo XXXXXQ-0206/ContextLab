@@ -1,0 +1,1641 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ContextLab REST API",
+    "version": "0.1.0",
+    "description": "Initial REST contract for ContextLab context engineering discovery APIs."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3100",
+      "description": "Default local API server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Platform"
+    },
+    {
+      "name": "Discovery"
+    },
+    {
+      "name": "Context Graph"
+    },
+    {
+      "name": "Providers"
+    }
+  ],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "healthz",
+        "tags": ["Platform"],
+        "summary": "Return API health.",
+        "responses": {
+          "200": {
+            "description": "API is healthy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meta": {
+      "get": {
+        "operationId": "getMeta",
+        "tags": ["Platform"],
+        "summary": "Return platform metadata for clients and SDKs.",
+        "responses": {
+          "200": {
+            "description": "Platform metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/openapi.json": {
+      "get": {
+        "operationId": "getOpenApiDocument",
+        "tags": ["Platform"],
+        "summary": "Return the checked-in OpenAPI contract served by the API.",
+        "responses": {
+          "200": {
+            "description": "OpenAPI contract document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenApiDocument"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers": {
+      "get": {
+        "operationId": "listProviders",
+        "tags": ["Providers"],
+        "summary": "Return configured model provider status without exposing secrets.",
+        "responses": {
+          "200": {
+            "description": "Provider readiness status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvidersResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces": {
+      "get": {
+        "operationId": "listWorkspaces",
+        "tags": ["Discovery"],
+        "summary": "List workspaces with pagination, filtering, and sorting.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WorkspaceSort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "tags": ["Discovery"],
+        "summary": "List projects for one workspace.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/WorkspaceId"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ProjectSort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/experiments": {
+      "get": {
+        "operationId": "listExperiments",
+        "tags": ["Discovery"],
+        "summary": "List experiments for one project.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ExperimentSort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Experiment list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/contexts": {
+      "get": {
+        "operationId": "listContexts",
+        "tags": ["Discovery"],
+        "summary": "List contexts for one project.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "name": "experiment_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ContextSort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Context list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}/commits": {
+      "get": {
+        "operationId": "listCommits",
+        "tags": ["Discovery"],
+        "summary": "List commits for one context.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContextId"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "name": "branch_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/CommitSort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commit list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}/commits/{commit_id}": {
+      "get": {
+        "operationId": "getCommit",
+        "tags": ["Discovery"],
+        "summary": "Get one context commit.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContextId"
+          },
+          {
+            "$ref": "#/components/parameters/CommitId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commit detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}/components": {
+      "get": {
+        "operationId": "listComponents",
+        "tags": ["Discovery"],
+        "summary": "List components for one context.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContextId"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ComponentKind"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ComponentSort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Component list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}/components/{component_id}": {
+      "get": {
+        "operationId": "getComponent",
+        "tags": ["Discovery"],
+        "summary": "Get one context component.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContextId"
+          },
+          {
+            "$ref": "#/components/parameters/ComponentId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Component detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}/evaluation-runs": {
+      "get": {
+        "operationId": "listEvaluationRuns",
+        "tags": ["Discovery"],
+        "summary": "List evaluation runs for one context.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContextId"
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PerPage"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "name": "suite_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "model_version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/EvaluationRunSort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation run list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationRunListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}/evaluation-scorecard": {
+      "get": {
+        "operationId": "getEvaluationScorecard",
+        "tags": ["Discovery"],
+        "summary": "Get a context-level evaluation scorecard.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContextId"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "name": "suite_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "model_version",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation scorecard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationScorecard"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/contexts/{context_id}/evaluation-runs/{run_id}": {
+      "get": {
+        "operationId": "getEvaluationRun",
+        "tags": ["Discovery"],
+        "summary": "Get one evaluation run for one context.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContextId"
+          },
+          {
+            "$ref": "#/components/parameters/RunId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation run detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationRunDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/graph-diffs": {
+      "post": {
+        "operationId": "compareGraphs",
+        "tags": ["Context Graph"],
+        "summary": "Compare two explicit Context Graph snapshots without persisting them.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GraphDiffRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deterministic structural graph diff.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphDiffResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/v1/context-graph/preview": {
+      "get": {
+        "operationId": "getContextGraphPreview",
+        "tags": ["Context Graph"],
+        "summary": "Return a deterministic Context Graph preview.",
+        "responses": {
+          "200": {
+            "description": "Context Graph preview.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextGraphResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/context-graph": {
+      "get": {
+        "operationId": "getWorkspaceContextGraph",
+        "tags": ["Context Graph"],
+        "summary": "Return a Context Graph for one workspace.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/WorkspaceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace Context Graph.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextGraphResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "WorkspaceId": {
+        "name": "workspace_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "ProjectId": {
+        "name": "project_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "ContextId": {
+        "name": "context_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "CommitId": {
+        "name": "commit_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "ComponentId": {
+        "name": "component_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "RunId": {
+        "name": "run_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "PerPage": {
+        "name": "per_page",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "Search": {
+        "name": "search",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request parameters.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Requested storage scope was not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "A requested commit exists but its graph snapshot is not materialized.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Server or storage contract error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok"
+          }
+        }
+      },
+      "MetaResponse": {
+        "type": "object",
+        "required": ["product", "primary_abstraction", "bilingual", "context_component_kinds", "capabilities"],
+        "properties": {
+          "product": {
+            "type": "string"
+          },
+          "primary_abstraction": {
+            "type": "string"
+          },
+          "bilingual": {
+            "type": "boolean"
+          },
+          "context_component_kinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ProvidersResponse": {
+        "type": "object",
+        "required": ["providers"],
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProviderStatus"
+            }
+          }
+        }
+      },
+      "ProviderStatus": {
+        "type": "object",
+        "required": ["id", "display_name", "configured", "base_url", "api_key_env", "api_key_fingerprint"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "base_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "api_key_env": {
+            "type": "string"
+          },
+          "api_key_fingerprint": {
+            "type": ["string", "null"]
+          }
+        }
+      },
+      "ListPagination": {
+        "type": "object",
+        "required": ["page", "per_page", "total"],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "WorkspaceItem": {
+        "type": "object",
+        "required": ["id", "name", "slug", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProjectItem": {
+        "type": "object",
+        "required": ["id", "workspace_id", "name", "slug", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ExperimentItem": {
+        "type": "object",
+        "required": ["id", "project_id", "name", "branch_name", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "branch_name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ContextItem": {
+        "type": "object",
+        "required": ["id", "project_id", "experiment_id", "name", "description", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "experiment_id": {
+            "type": ["string", "null"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": ["string", "null"]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CommitItem": {
+        "type": "object",
+        "required": ["id", "context_id", "branch_name", "message", "parent_commit_ids", "change_count", "authored_at", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "context_id": {
+            "type": "string"
+          },
+          "branch_name": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "parent_commit_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "change_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "authored_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CommitDetail": {
+        "type": "object",
+        "required": ["id", "context_id", "branch_name", "message", "parent_commit_ids", "changes", "change_count", "authored_at", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "context_id": {
+            "type": "string"
+          },
+          "branch_name": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "parent_commit_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "change_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "authored_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ComponentItem": {
+        "type": "object",
+        "required": ["id", "context_id", "kind", "name", "content_hash", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "context_id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ComponentKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ComponentDetail": {
+        "type": "object",
+        "required": ["id", "context_id", "kind", "name", "content_hash", "metadata", "created_at", "updated_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "context_id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ComponentKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EvaluationRunItem": {
+        "type": "object",
+        "required": ["id", "context_id", "suite_name", "model_version", "temperature", "metric_count", "executed_at", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "context_id": {
+            "type": "string"
+          },
+          "suite_name": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "metric_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "executed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EvaluationRunDetail": {
+        "type": "object",
+        "required": ["id", "context_id", "suite_name", "model_version", "temperature", "metric_count", "metrics", "executed_at", "created_at"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "context_id": {
+            "type": "string"
+          },
+          "suite_name": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "metric_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "executed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EvaluationScorecardMetric": {
+        "type": "object",
+        "required": ["name", "average", "sample_count"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "average": {
+            "type": "number"
+          },
+          "sample_count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "EvaluationScorecard": {
+        "type": "object",
+        "required": ["context_id", "run_count", "metrics"],
+        "properties": {
+          "context_id": {
+            "type": "string"
+          },
+          "run_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvaluationScorecardMetric"
+            }
+          }
+        }
+      },
+      "WorkspaceListResponse": {
+        "$ref": "#/components/schemas/ListResponseWorkspaceItem"
+      },
+      "ProjectListResponse": {
+        "$ref": "#/components/schemas/ListResponseProjectItem"
+      },
+      "ExperimentListResponse": {
+        "$ref": "#/components/schemas/ListResponseExperimentItem"
+      },
+      "ContextListResponse": {
+        "$ref": "#/components/schemas/ListResponseContextItem"
+      },
+      "CommitListResponse": {
+        "$ref": "#/components/schemas/ListResponseCommitItem"
+      },
+      "ComponentListResponse": {
+        "$ref": "#/components/schemas/ListResponseComponentItem"
+      },
+      "EvaluationRunListResponse": {
+        "$ref": "#/components/schemas/ListResponseEvaluationRunItem"
+      },
+      "ListResponseWorkspaceItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ListResponseBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WorkspaceItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ListResponseProjectItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ListResponseBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ProjectItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ListResponseExperimentItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ListResponseBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ExperimentItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ListResponseContextItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ListResponseBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ContextItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ListResponseCommitItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ListResponseBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CommitItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ListResponseComponentItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ListResponseBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ComponentItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ListResponseEvaluationRunItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ListResponseBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EvaluationRunItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ListResponseBase": {
+        "type": "object",
+        "required": ["items", "pagination"],
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/ListPagination"
+          }
+        }
+      },
+      "ContextGraphResponse": {
+        "type": "object",
+        "required": ["graph"],
+        "properties": {
+          "graph": {
+            "$ref": "#/components/schemas/ContextGraph"
+          }
+        }
+      },
+      "GraphDiffRequest": {
+        "type": "object",
+        "required": ["original", "revised"],
+        "properties": {
+          "original": {
+            "$ref": "#/components/schemas/GraphSnapshot"
+          },
+          "revised": {
+            "$ref": "#/components/schemas/GraphSnapshot"
+          }
+        }
+      },
+      "GraphSnapshot": {
+        "type": "object",
+        "required": ["nodes", "edges"],
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphSnapshotNode"
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphSnapshotEdge"
+            }
+          }
+        }
+      },
+      "GraphSnapshotNode": {
+        "type": "object",
+        "required": ["id", "kind", "label"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["workspace", "project", "experiment", "context", "component", "prompt", "memory", "knowledge", "tool", "model", "evaluation", "workflow"]
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "GraphSnapshotEdge": {
+        "type": "object",
+        "required": ["source", "target", "kind"],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["owns", "contains", "configures", "retrieves", "uses", "evaluates", "produces", "tracks"]
+          }
+        }
+      },
+      "GraphDiffResponse": {
+        "type": "object",
+        "required": ["added_nodes", "removed_nodes", "modified_nodes", "added_edges", "removed_edges"],
+        "properties": {
+          "added_nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphNode"
+            }
+          },
+          "removed_nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphNode"
+            }
+          },
+          "modified_nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphNodeChange"
+            }
+          },
+          "added_edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphEdge"
+            }
+          },
+          "removed_edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphEdge"
+            }
+          }
+        }
+      },
+      "GraphNodeChange": {
+        "type": "object",
+        "required": ["node_id", "original_kind", "revised_kind", "original_label", "revised_label"],
+        "properties": {
+          "node_id": {
+            "type": "string"
+          },
+          "original_kind": {
+            "type": "string"
+          },
+          "revised_kind": {
+            "type": "string"
+          },
+          "original_label": {
+            "type": "string"
+          },
+          "revised_label": {
+            "type": "string"
+          }
+        }
+      },
+      "ContextGraph": {
+        "type": "object",
+        "required": ["nodes", "edges"],
+        "properties": {
+          "nodes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/GraphNode"
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GraphEdge"
+            }
+          }
+        }
+      },
+      "GraphNode": {
+        "type": "object",
+        "required": ["id", "kind", "label"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "GraphEdge": {
+        "type": "object",
+        "required": ["source", "target", "kind"],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "message"],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "OpenApiDocument": {
+        "type": "object",
+        "required": ["openapi", "info", "paths"],
+        "properties": {
+          "openapi": {
+            "type": "string"
+          },
+          "info": {
+            "type": "object"
+          },
+          "paths": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": true
+      },
+      "WorkspaceSort": {
+        "type": "string",
+        "enum": ["name", "-name", "created_at", "-created_at"]
+      },
+      "ProjectSort": {
+        "type": "string",
+        "enum": ["name", "-name", "created_at", "-created_at"]
+      },
+      "ExperimentSort": {
+        "type": "string",
+        "enum": ["name", "-name", "branch_name", "-branch_name", "created_at", "-created_at"]
+      },
+      "ContextSort": {
+        "type": "string",
+        "enum": ["name", "-name", "created_at", "-created_at"]
+      },
+      "CommitSort": {
+        "type": "string",
+        "enum": ["authored_at", "-authored_at", "created_at", "-created_at", "branch_name", "-branch_name"]
+      },
+      "ComponentKind": {
+        "type": "string",
+        "enum": [
+          "prompt",
+          "system_prompt",
+          "memory",
+          "knowledge",
+          "retrieval",
+          "embedding",
+          "model_configuration",
+          "tool",
+          "mcp_server",
+          "variable",
+          "output_schema",
+          "workflow",
+          "conversation",
+          "evaluation"
+        ]
+      },
+      "ComponentSort": {
+        "type": "string",
+        "enum": ["name", "-name", "kind", "-kind", "created_at", "-created_at"]
+      },
+      "EvaluationRunSort": {
+        "type": "string",
+        "enum": ["executed_at", "-executed_at", "created_at", "-created_at", "suite_name", "-suite_name", "model_version", "-model_version"]
+      }
+    }
+  }
+}

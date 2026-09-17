@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ContextLab",
+  "version": "0.1.0",
+  "identifier": "org.contextlab.staging",
+  "app": {
+    "windows": []
+  },
+  "bundle": {
+    "active": false
+  }
+}

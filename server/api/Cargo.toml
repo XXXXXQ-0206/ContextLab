@@ -1,0 +1,44 @@
+[package]
+name = "contextlab-api"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "ContextLab REST API gateway."
+
+[dependencies]
+async-trait.workspace = true
+axum.workspace = true
+chrono.workspace = true
+contextlab-auth = { path = "../../crates/auth" }
+contextlab-context-core = { path = "../../crates/context-core" }
+contextlab-diff-engine = { path = "../../crates/diff-engine" }
+contextlab-evaluation = { path = "../../crates/evaluation" }
+contextlab-graph = { path = "../../crates/graph" }
+contextlab-embedding = { path = "../../crates/embedding" }
+contextlab-model-gateway = { path = "../../crates/model-gateway" }
+contextlab-mcp = { path = "../../crates/mcp" }
+contextlab-plugin-runtime = { path = "../../crates/plugin-runtime" }
+contextlab-knowledge = { path = "../../crates/knowledge" }
+contextlab-memory = { path = "../../crates/memory" }
+contextlab-storage = { path = "../../crates/storage" }
+contextlab-versioning = { path = "../../crates/versioning" }
+contextlab-workflow = { path = "../../crates/workflow" }
+dotenvy.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+jsonwebtoken.workspace = true
+http-body-util.workspace = true
+tower.workspace = true
+
+[lints]
+workspace = true

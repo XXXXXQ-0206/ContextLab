@@ -1,0 +1,21 @@
+target/
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
+*.rmeta
+.env
+.env.*
+!.env.example
+dist/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+
+# Local agent workspaces and scratch state.
+.agents/
+.codex/
+
+# Local acceptance run artifacts (screenshots, service logs).
+.acceptance-*

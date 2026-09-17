@@ -10,6 +10,7 @@ import {
   type LocalWorkflowContextBindingsTarget
 } from "./local-workflow-context-bindings-data";
 import { LocalWorkflowContextBindingsScreen } from "./local-workflow-context-bindings-screen";
+import { presentLocalWorkflowContextBindings } from "./local-workflow-context-bindings-presenter";
 import {
   loadLocalWorkflowExecutionStatus,
   LocalWorkflowExecutionStatusProxyError,
@@ -42,10 +43,21 @@ export function LocalWorkflowContextBindingsInspector({
   const requestGeneration = useRef(0);
   const statusRequestGeneration = useRef(0);
   const target = useMemo(() => createTarget(contextId, commitId), [contextId, commitId]);
+  const currentResource = resource.target.context_id === target.context_id
+    && resource.target.commit_id === target.commit_id
+    ? resource
+    : { kind: "empty" as const, target };
+  const currentStatusResource = statusResource !== null
+    && statusResource.target.context_id === target.context_id
+    && statusResource.target.context_commit_id === target.commit_id
+    ? statusResource
+    : null;
+  const hasCurrentResource = resource.target.context_id === target.context_id
+    && resource.target.commit_id === target.commit_id;
   const canInspect = bearerToken.trim().length > 0 && !isLoading && !isStatusLoading;
-  const bindings = resource.kind === "ready" ? resource.summary.bindings : [];
+  const bindings = currentResource.kind === "ready" ? currentResource.summary.bindings : [];
   const selectedBinding = bindings.find((binding) => binding.binding_id === selectedBindingId);
-  const canInspectStatus = resource.kind === "ready"
+  const canInspectStatus = currentResource.kind === "ready"
     && selectedBinding !== undefined
     && isCanonicalUuid(workflowRunId.trim())
     && bearerToken.trim().length > 0
@@ -85,6 +97,7 @@ export function LocalWorkflowContextBindingsInspector({
       const response = await fetch(
         `/api/local/contexts/${encodeURIComponent(contextId)}/commits/${encodeURIComponent(commitId)}/workflow-bindings`,
         {
+          method: "GET",
           headers: {
             accept: "application/json",
             authorization: `Bearer ${bearerToken.trim()}`
@@ -173,11 +186,15 @@ export function LocalWorkflowContextBindingsInspector({
       if (statusRequestGeneration.current !== generation) {
         return;
       }
-      const kind = error instanceof LocalWorkflowExecutionStatusProxyError && error.status === 503
-        ? "unavailable"
+      const kind = error instanceof LocalWorkflowExecutionStatusProxyError
+        ? error.status === 503
+          ? "unavailable"
+          : error.status === 404
+            ? "empty"
+            : "error"
         : "error";
       setStatusResource({ kind, target: exactTarget });
-      setStatusNotice(presentStatusError(error));
+      setStatusNotice(kind === "empty" ? null : presentStatusError(error));
     } finally {
       if (statusRequestGeneration.current === generation) {
         setIsStatusLoading(false);
@@ -216,15 +233,15 @@ export function LocalWorkflowContextBindingsInspector({
       <p className="context-benchmark-evidence__scope">
         Context / 上下文: <code>{contextId}</code> · Commit / 提交: <code>{commitId}</code>
       </p>
-      {notice ? (
+      {notice && hasCurrentResource ? (
         <p className="context-benchmark-evidence__notice" role="alert">
           {notice}
         </p>
       ) : null}
-      <LocalWorkflowContextBindingsScreen resource={resource} />
+      <LocalWorkflowContextBindingsScreen view={presentLocalWorkflowContextBindings(currentResource)} />
       <div className="context-benchmark-evidence__controls">
         <Select
-          disabled={resource.kind !== "ready" || isLoading || isStatusLoading}
+          disabled={currentResource.kind !== "ready" || isLoading || isStatusLoading}
           label="Exact binding row / 精确绑定行"
           name="workflow-context-bindings-selected-binding"
           onChange={(event) => selectBinding(event.target.value)}
@@ -240,11 +257,16 @@ export function LocalWorkflowContextBindingsInspector({
         <Input
           autoComplete="off"
           description="Explicit canonical UUID; memory only / 显式规范 UUID；仅内存"
-          disabled={resource.kind !== "ready" || isLoading || isStatusLoading}
+          disabled={currentResource.kind !== "ready" || isLoading || isStatusLoading}
+          id="local-workflow-context-bindings-workflow-run-id"
           label="Workflow run_id / Workflow run_id"
           name="workflow-context-bindings-workflow-run-id"
           onChange={(event) => changeWorkflowRunId(event.target.value)}
+          aria-describedby={statusNotice ? "local-workflow-context-bindings-workflow-run-id-error" : undefined}
+          aria-invalid={workflowRunId.trim().length > 0 && !isCanonicalUuid(workflowRunId.trim())}
+          aria-required="true"
           pattern="[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+          required
           spellCheck={false}
           value={workflowRunId}
         />
@@ -252,12 +274,16 @@ export function LocalWorkflowContextBindingsInspector({
           {isStatusLoading ? "Inspecting status... / 正在审阅状态..." : "Inspect run status / 审阅运行状态"}
         </Button>
       </div>
-      {statusNotice ? (
-        <p className="context-benchmark-evidence__notice" role="alert">
+      {statusNotice && hasCurrentResource ? (
+        <p
+          className="context-benchmark-evidence__notice"
+          id="local-workflow-context-bindings-workflow-run-id-error"
+          role="alert"
+        >
           {statusNotice}
         </p>
       ) : null}
-      {statusResource ? <LocalWorkflowExecutionStatusScreen resource={statusResource} /> : null}
+      {currentStatusResource ? <LocalWorkflowExecutionStatusScreen resource={currentStatusResource} /> : null}
     </section>
   );
 }
@@ -289,7 +315,10 @@ async function parseProxyErrorBody(response: Response): Promise<LocalApiErrorBod
   try {
     const body = (await response.json()) as Partial<LocalApiErrorBody>;
     if (typeof body.error === "string" && typeof body.message === "string") {
-      return { error: body.error, message: body.message };
+      return {
+        error: body.error,
+        message: `ContextLab workflow context bindings request failed with status ${response.status}`
+      };
     }
   } catch {
   }
@@ -314,7 +343,7 @@ function presentBindingsError(error: unknown): string {
     if (error.status === 503) {
       return "Workflow context bindings are unavailable / Workflow 上下文绑定暂不可用。";
     }
-    return `Unable to inspect workflow context bindings / 无法检查 Workflow 上下文绑定。${error.body.message}`;
+    return "Unable to inspect workflow context bindings / 无法检查 Workflow 上下文绑定。";
   }
 
   if (error instanceof TypeError) {
