@@ -176,20 +176,39 @@ Publication is gated on the acceptance above. Once accepted:
 
 发布以通过上述验收为前提。验收通过后：
 
-1. Stage every non-ignored file and run `git diff --cached --check` before committing.
-2. Create the commit, then create the GitHub repository and push `master`.
-3. Watch the first `Verify` run. It provisions PostgreSQL 16.14 and executes the 46 named ignored
-   storage cases plus the production-like migration rehearsal — the evidence this machine cannot
-   produce locally. Treat a red run as a blocking defect, not as a deferred item.
-4. Record the resulting run URL and artifact names in `docs/roadmap/active-long-term-goal.md` as
-   remote CI evidence before making any release or production claim.
+1. ~~Stage every non-ignored file and run `git diff --cached --check` before committing.~~
+   Done: 728 files staged, `git diff --cached --check` clean.
+2. ~~Create the commit, then create the GitHub repository and push.~~
+   Done: published at <https://github.com/XXXXXQ-0206/ContextLab>; the local branch was renamed
+   `master` → `main` to match the repository default branch.
+3. ~~Watch the first `Verify` run.~~ Done, and it was red twice before it went green. Both failures
+   were real product/repository defects, not flakes, and both are fixed:
+   - a `#[ignore]`d storage test had gone stale against migration `0017` and failed with a not-null
+     violation instead of the cross-Context foreign key it asserted;
+   - `actions/upload-artifact@v4` skipped the dot-prefixed evidence directories because
+     `include-hidden-files` defaults to `false`, so the evidence upload failed after every check had
+     already passed.
+4. ~~Record the resulting run URL and artifact names in `docs/roadmap/active-long-term-goal.md`.~~
+   Done: run `35181152716` on `main`, conclusion `success`, head commit `0a1c6e9`, with
+   `contextlab-ci-evidence` and `contextlab-rehearsal-evidence` retained until 2026-12-16.
 
-1. 暂存所有未被 ignore 的文件，并在提交前运行 `git diff --cached --check`。
-2. 创建提交，再创建 GitHub repository 并推送 `master`。
-3. 观察首次 `Verify` 运行。它会提供 PostgreSQL 16.14 并执行 46 个具名 ignored storage case 与 production-like
-   migration rehearsal——正是本机无法产出的证据。红色运行按阻塞缺陷处理，不按延期项处理。
-4. 在作出任何 release 或 production 声明之前，把得到的 run URL 与 artifact 名称记入
-   `docs/roadmap/active-long-term-goal.md`，作为 remote CI 证据。
+1. ~~暂存所有未被 ignore 的文件，并在提交前运行 `git diff --cached --check`。~~
+   已完成：728 个文件已暂存，`git diff --cached --check` 干净。
+2. ~~创建提交，再创建 GitHub repository 并推送。~~
+   已完成：发布在 <https://github.com/XXXXXQ-0206/ContextLab>；本地分支已由 `master` 改名为 `main` 以匹配仓库默认分支。
+3. ~~观察首次 `Verify` 运行。~~ 已完成，且经过两次红色才转绿。两次失败都是真实的产品/仓库缺陷，不是抖动，均已修复：
+   - 一个 `#[ignore]` 的 storage 测试相对迁移 `0017` 已过时，触发的是 not-null 违规，而不是它所断言的跨 Context 外键；
+   - `actions/upload-artifact@v4` 因 `include-hidden-files` 默认为 `false` 而跳过了点开头的证据目录，导致在所有检查都已通过之后，证据上传才失败。
+4. ~~把得到的 run URL 与 artifact 名称记入 `docs/roadmap/active-long-term-goal.md`。~~
+   已完成：`main` 上的 run `35181152716`，结论 `success`，head commit `0a1c6e9`，
+   `contextlab-ci-evidence` 与 `contextlab-rehearsal-evidence` 保留至 2026-12-16。
+
+Remote CI success does not close the long-term goal and does not authorize public protected-write
+promotion, release, or production rollout. Those remain separate, deferred decisions with their own
+external prerequisites.
+
+远端 CI 成功不关闭长期目标，也不授权 public protected-write promotion、release 或 production rollout。
+它们仍是各自带有外部前置的独立延期决策。
 
 ### Author identity / 作者身份
 

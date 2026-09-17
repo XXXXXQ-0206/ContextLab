@@ -3905,3 +3905,77 @@ when a disposable loopback PostgreSQL service is directly available.
 本次审计本身为 `completed / verified locally`；protected runtime success、live PostgreSQL persistence 与 authenticated
 browser-to-BFF-to-protected-Axum success 继续为 `unobserved`。未修改 source、API、SDK、OpenAPI、Web、migration、provider、
 secret、database、write 或 GraphDiff behavior。长期目标保持 `active`；仅在 disposable loopback PostgreSQL service 实际可用时重新进入 runtime evidence。
+
+## 2026-09-17 First Public Publication and Remote CI Receipt / 2026-09-17 首次公开发布与远端 CI 回执
+
+ContextLab is published at <https://github.com/XXXXXQ-0206/ContextLab>. The initial publication
+pushed 728 files across two commits and turned the previously `deferred` remote CI boundary into
+observed evidence. This is remote CI evidence only; it is not an operator-approved production
+change rehearsal, a release, or a production rollout.
+
+ContextLab 已发布在 <https://github.com/XXXXXQ-0206/ContextLab>。首次发布以两个提交推送 728 个文件，并把此前
+`deferred` 的远端 CI 边界转为已观测证据。这仅是远端 CI 证据，不是 operator 批准的 production change rehearsal、
+release 或生产推广。
+
+### Remote CI receipt / 远端 CI 回执
+
+- Run `35181152716` on branch `main` concluded `success` at head commit `0a1c6e9336fccd0b995f45d38dcd45db1baa6d8e`.
+- The capture artifact self-reports `checked_out_commit_sha == provider_head_sha == 0a1c6e9…`, workflow
+  `.github/workflows/verify.yml` with SHA-256 `e5614291fd251ebd3ca483c67c57877f0eb19bf364fc276d22d93f4008a151b6`,
+  and `generated_at_utc=2026-09-17T04:18:24Z`.
+- Artifacts retained for 90 days (until 2026-12-16): `contextlab-ci-evidence` and
+  `contextlab-rehearsal-evidence`. Both are redacted captures: the first contains only provenance
+  fields, and the second contains only SHA-256 manifests for migrations, privileged SQL assets, and
+  the rehearsal runner. Neither contains environment values, database URLs, credentials, or raw logs.
+- Job steps that succeeded include `cargo fmt --all -- --check`, `cargo test --workspace`, the
+  26-case disposable PostgreSQL storage suite, the production-like migration rehearsal, and
+  `pnpm check:web`.
+
+- `main` 分支的 run `35181152716` 在 head commit `0a1c6e9336fccd0b995f45d38dcd45db1baa6d8e` 上以 `success` 结束。
+- capture artifact 自报 `checked_out_commit_sha == provider_head_sha == 0a1c6e9…`，workflow
+  `.github/workflows/verify.yml` 的 SHA-256 为 `e5614291fd251ebd3ca483c67c57877f0eb19bf364fc276d22d93f4008a151b6`，
+  `generated_at_utc=2026-09-17T04:18:24Z`。
+- 产物保留 90 天（至 2026-12-16）：`contextlab-ci-evidence` 与 `contextlab-rehearsal-evidence`。两者都是脱敏捕获：
+  前者只含 provenance 字段，后者只含 migration、privileged SQL asset 与 rehearsal runner 的 SHA-256 清单。
+  两者都不含 environment value、database URL、credential 或 raw log。
+- 成功的 job step 包括 `cargo fmt --all -- --check`、`cargo test --workspace`、26 项 disposable PostgreSQL storage
+  suite、production-like migration rehearsal 与 `pnpm check:web`。
+
+### Defects the remote boundary exposed / 远端边界暴露的缺陷
+
+Two real defects were invisible to local-only evidence and were found by the first CI runs. Both are
+fixed and the fix is included in the successful run above.
+
+两个真实缺陷对纯本地证据不可见，由最初的 CI 运行发现。两者都已修复，且修复包含在上面的成功运行中。
+
+1. `postgres::tests::postgres_guarded_scope_constraints_reject_cross_context_references` inserted a
+   `context_commit_idempotency` row without `branch_name`. Migration `0017` added that column as
+   `NOT NULL`, so under the full migration set the insert failed with a not-null violation before
+   reaching `fk_context_commit_idempotency_same_context`, and `error.constraint()` returned `None`.
+   The test is `#[ignore]`d without a disposable database, so the drift persisted until CI executed
+   the suite. Production code already supplied the column; only the test lagged.
+2. `actions/upload-artifact@v4` defaults `include-hidden-files` to `false`, so the dot-prefixed
+   `.ci-evidence/` and `.rehearsal-evidence/` directories matched nothing and the upload failed
+   against `if-no-files-found: error`. Every functional check had already passed; only the evidence
+   upload failed. Both upload steps now set `include-hidden-files: true`, and the two static workflow
+   guards require the setting.
+
+1. `postgres::tests::postgres_guarded_scope_constraints_reject_cross_context_references` 插入 `context_commit_idempotency`
+   行时未提供 `branch_name`。迁移 `0017` 已把该列设为 `NOT NULL`，因此在完整迁移集下，这条 insert 在到达
+   `fk_context_commit_idempotency_same_context` 之前就因 not-null 违规失败，`error.constraint()` 返回 `None`。该测试在没有
+   disposable database 时是 `#[ignore]`，所以漂移一直存在，直到 CI 执行该套件才暴露。生产代码本就提供了该列，落后的只是测试。
+2. `actions/upload-artifact@v4` 的 `include-hidden-files` 默认为 `false`，因此点开头的 `.ci-evidence/` 与
+   `.rehearsal-evidence/` 匹配不到任何文件，上传在 `if-no-files-found: error` 下失败。当时所有功能检查都已通过，失败的只有证据上传。
+   两个上传步骤现都设置 `include-hidden-files: true`，且两个静态 workflow 守卫都要求该设置。
+
+### Boundary that remains open / 仍然开放的边界
+
+Remote CI success is not an operator-approved production change rehearsal and does not authorize
+public protected-write promotion, release, or production rollout. Local authenticated
+browser-to-BFF-to-protected-Axum runtime is still `unobserved` on this machine, and the completion
+criteria in `docs/roadmap/completion-criteria.md` remain the governing document. The long-term goal
+stays `active`.
+
+远端 CI 成功不是 operator 批准的 production change rehearsal，也不授权 public protected-write promotion、release 或
+production rollout。本机的 authenticated browser-to-BFF-to-protected-Axum runtime 仍为 `unobserved`，
+`docs/roadmap/completion-criteria.md` 中的收束条件仍是治理文件。长期目标保持 `active`。
