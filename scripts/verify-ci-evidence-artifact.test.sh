@@ -49,5 +49,6 @@ require '          sha256sum "$evidence_dir/verification-evidence.txt" > "$evide
 require '        uses: actions/upload-artifact@v4'
 require '          name: contextlab-ci-evidence'
 require '          path: .ci-evidence/'
+require '          include-hidden-files: true'
 require '          retention-days: 90'
 require '          if-no-files-found: error'

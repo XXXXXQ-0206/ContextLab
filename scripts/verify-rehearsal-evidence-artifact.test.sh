@@ -61,6 +61,7 @@ require_upload 'if: ${{ success() }}'
 require_upload 'uses: actions/upload-artifact@v4'
 require_upload 'name: contextlab-rehearsal-evidence'
 require_upload 'path: .rehearsal-evidence/'
+require_upload 'include-hidden-files: true'
 require_upload 'retention-days: 90'
 require_upload 'if-no-files-found: error'
 
