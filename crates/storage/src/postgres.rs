@@ -13076,7 +13076,7 @@ WHERE conrelid = 'context_commit_parents'::regclass
         );
 
         let idempotency_error = sqlx::query(
-            "INSERT INTO context_commit_idempotency (identity_source, principal_id, context_id, idempotency_key, request_digest, commit_id) VALUES ('https://issuer.contextlab.test', 'user:alex', $1, 'foreign-result', 'sha256:foreign-result', $2)",
+            "INSERT INTO context_commit_idempotency (identity_source, principal_id, context_id, branch_name, idempotency_key, request_digest, commit_id) VALUES ('https://issuer.contextlab.test', 'user:alex', $1, 'main', 'foreign-result', 'sha256:foreign-result', $2)",
         )
         .bind(primary_context_id)
         .bind(foreign_commit_id)
