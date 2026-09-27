@@ -39,7 +39,7 @@ export function LocalBenchmarkWorkspaceScreen({ controls, view }: LocalBenchmark
       <CapabilityState
         ariaLabel={view.status.ariaLabel}
         description={view.status.description}
-        detail={view.status.detail}
+        detail={view.status.detail === view.status.description ? undefined : view.status.detail}
         label={view.status.label}
         state={view.status.state}
         stateLabel={view.status.stateLabel}

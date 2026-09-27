@@ -50,6 +50,16 @@ test("renders accessible bilingual semantics for all five workspace states", () 
   }
 });
 
+test("does not repeat an empty-state message in the status detail", () => {
+  const message = "No server projection loaded. / 尚未加载服务端投影。";
+  const resource = createLocalBenchmarkWorkspaceResource({ state: "empty", target, message });
+  const markup = renderToStaticMarkup(
+    <LocalBenchmarkWorkspaceScreen view={presentLocalBenchmarkWorkspace(resource)} />
+  );
+
+  assert.equal(markup.match(/No server projection loaded/g)?.length, 1);
+});
+
 test("renders only the server-owned projection in deterministic table order", () => {
   const workspace = parseLocalBenchmarkWorkspace(benchmarkWorkspacePayload());
   const view = presentLocalBenchmarkWorkspace(

@@ -1,5 +1,4 @@
 import {
-  Button,
   CodeChip,
   DefinitionGrid,
   Panel,
@@ -8,10 +7,11 @@ import {
   StatusPill
 } from "@contextlab/ui";
 import {
-  Activity,
   ArrowUpRight,
   Boxes,
   Braces,
+  ChevronRight,
+  CircleDot,
   Clock3,
   Database,
   Fingerprint,
@@ -21,9 +21,7 @@ import {
   LineChart,
   Network,
   Play,
-  Search,
-  Settings,
-  Sparkles
+  Workflow
 } from "lucide-react";
 import { ContextGraphInspector } from "./context-graph-inspector";
 import { ContextLifecycleGraphReviewBridge } from "./context-lifecycle-graph-review-bridge";
@@ -42,40 +40,61 @@ import type { ContextWorkspaceScreenModel } from "./context-workspace-presenter"
 function WorkspaceSidebar({ source }: Pick<ContextWorkspaceScreenModel, "source">) {
   return (
     <aside className="sidebar" aria-label="Workspace navigation">
-      <div className="brand-mark">
-        <span className="brand-glyph">CL</span>
-        <div>
-          <div className="brand-title">ContextLab</div>
-          <div className="brand-subtitle">Context Engineering / 上下文工程</div>
-        </div>
+      <a className="brand-mark" href="#workspace" aria-label="ContextLab home">
+        <span className="brand-glyph" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
+        <span className="brand-copy">
+          <span className="brand-title">ContextLab</span>
+          <span className="brand-subtitle">Context engineering</span>
+        </span>
+      </a>
+
+      <div className="sidebar-workspace">
+        <span className="sidebar-workspace__mark">D</span>
+        <span className="sidebar-workspace__copy">
+          <strong>Default workspace</strong>
+        </span>
       </div>
 
       <nav className="nav-stack">
+        <span className="nav-section-label">Build</span>
         <a className="nav-item" data-active="true" href="#workspace">
-          <Boxes />
-          Workspace
+          <Boxes aria-hidden="true" />
+          Overview
         </a>
         <a className="nav-item" href="#graph">
-          <Network />
-          Context Graph
+          <Network aria-hidden="true" />
+          Context graph
         </a>
+        <a className="nav-item" href="#components">
+          <Fingerprint aria-hidden="true" />
+          Components
+        </a>
+        <span className="nav-section-label nav-section-label--spaced">Review</span>
         <a className="nav-item" href="#history">
-          <GitCommitHorizontal />
-          Version History
+          <GitCommitHorizontal aria-hidden="true" />
+          Version history
         </a>
         <a className="nav-item" href="#evaluation">
-          <LineChart />
-          Evaluation
+          <LineChart aria-hidden="true" />
+          Evaluations
         </a>
-        <a className="nav-item" href="#settings">
-          <Settings />
-          Settings
+        <a className="nav-item" href="#benchmark-workspace">
+          <Workflow aria-hidden="true" />
+          Benchmark lab
         </a>
       </nav>
 
       <div className="sidebar-status" aria-label="Data source mode">
         <div className="source-current">
-          <StatusPill tone={source.tone}>{source.label}</StatusPill>
+          <div className="sidebar-status__heading">
+            <span className="sidebar-status__dot" aria-hidden="true" />
+            <span>Data source</span>
+            <StatusPill tone={source.tone}>{source.label}</StatusPill>
+          </div>
           <p>{source.description}</p>
         </div>
         <ul className="source-mode-list" aria-label="Data source mode states">
@@ -95,51 +114,102 @@ function WorkspaceSidebar({ source }: Pick<ContextWorkspaceScreenModel, "source"
   );
 }
 
-function WorkspaceHeader({ title }: { title: string }) {
+function WorkspaceHeader({
+  title,
+  description,
+  project
+}: {
+  title: string;
+  description: string;
+  project: string;
+}) {
   return (
     <header className="topbar">
       <div className="workspace-heading">
-        <span className="eyebrow">Default Workspace / 默认工作区</span>
+        <div className="breadcrumb">
+          <span>Default workspace</span>
+          <ChevronRight aria-hidden="true" />
+          <span>{project}</span>
+          <ChevronRight aria-hidden="true" />
+          <span className="breadcrumb__current">Context</span>
+        </div>
         <h1 className="workspace-title">{title}</h1>
-        <p className="workspace-kicker">
-          Context graph, commit history, component fingerprints, and evaluation runs now share one
-          operational surface. 上下文图谱、版本历史、组件指纹与评测运行在同一个工作台里协同检查。
-        </p>
+        <p className="workspace-kicker">{description}</p>
       </div>
       <div className="topbar-actions">
-        <Button tone="muted" icon={<Search aria-hidden="true" />}>
-          Search
-        </Button>
-        <Button tone="muted" icon={<GitBranch aria-hidden="true" />}>
-          Branch
-        </Button>
-        <Button icon={<Play aria-hidden="true" />}>Run Eval</Button>
+        <a className="cl-button cl-button--muted" href="#graph-diff-review">
+          <GitCompareArrows aria-hidden="true" />
+          Review changes
+        </a>
+        <a className="cl-button cl-button--solid" href="#benchmark-workspace">
+          <Play aria-hidden="true" />
+          Open benchmark lab
+        </a>
       </div>
     </header>
+  );
+}
+
+function WorkspaceMetrics({
+  componentCount,
+  commitCount,
+  evaluationCount
+}: {
+  componentCount: number;
+  commitCount: number;
+  evaluationCount: number;
+}) {
+  const items = [
+    { icon: Fingerprint, label: "Components", value: componentCount },
+    { icon: GitBranch, label: "Commits", value: commitCount },
+    { icon: LineChart, label: "Evaluation runs", value: evaluationCount }
+  ];
+
+  return (
+    <dl className="workspace-metrics" aria-label="Context activity summary">
+      {items.map(({ icon: Icon, label, value }) => (
+        <div className="workspace-metric" key={label}>
+          <dt>
+            <Icon aria-hidden="true" />
+            {label}
+          </dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+      <div className="workspace-metrics__status">
+        <CircleDot aria-hidden="true" />
+        <span>{evaluationCount > 0 ? "Evaluation data recorded" : "No evaluation data"}</span>
+      </div>
+    </dl>
   );
 }
 
 function ContextDetailPanel({ workspace }: Pick<ContextWorkspaceScreenModel, "workspace">) {
   return (
     <Panel as="section" className="context-panel" aria-labelledby="context-heading">
-      <PanelHeader actions={<StatusPill tone="success">Evaluated</StatusPill>}>
+      <PanelHeader actions={<StatusPill tone="info">Context</StatusPill>}>
         <h2 className="panel-title" id="context-heading">
-          Context Detail
+          Context details
         </h2>
-        <p className="panel-caption">Production unit / 生产上下文单元</p>
+        <p className="panel-caption">Production context</p>
       </PanelHeader>
 
+      <p className="context-description">{workspace.description}</p>
       <DefinitionGrid items={workspace.contextFacts} />
 
-      <p className="context-description">{workspace.description}</p>
-
-      <DefinitionGrid
-        aria-label="Discovery routes"
-        columns={1}
-        compact
-        items={workspace.discoveryRoutes}
-        valueTone="info"
-      />
+      <details className="context-routes">
+        <summary>
+          <Braces aria-hidden="true" />
+          API discovery routes
+        </summary>
+        <DefinitionGrid
+          aria-label="Discovery routes"
+          columns={1}
+          compact
+          items={workspace.discoveryRoutes}
+          valueTone="info"
+        />
+      </details>
     </Panel>
   );
 }
@@ -205,17 +275,17 @@ function OperationsPanel({
 
   return (
     <Panel as="section" className="operations-panel" aria-labelledby="operations-heading">
-      <PanelHeader actions={<Activity aria-hidden="true" size={18} />}>
+      <PanelHeader actions={<GitBranch aria-hidden="true" size={18} />}>
         <h2 className="panel-title" id="operations-heading">
-          Operations
+          Version history &amp; evaluation
         </h2>
-        <p className="panel-caption">History and benchmark readiness</p>
+        <p className="panel-caption">Review persisted changes and benchmark evidence</p>
       </PanelHeader>
 
       <div className="operation-block" id="history">
         <div className="block-heading">
           <GitCommitHorizontal aria-hidden="true" />
-          <span>Commit History / 版本历史</span>
+          <span>Commit history</span>
         </div>
         <div className="timeline">
           {operations.commits.map((commit) => (
@@ -229,8 +299,8 @@ function OperationsPanel({
                 <div className="row-meta">
                   <Clock3 aria-hidden="true" />
                   {commit.authoredAt}
-                  <span>{commit.changeCount} change</span>
-                  <span>{commit.parentCount} parent</span>
+                  <span>{commit.changeCount} changes</span>
+                  <span>{commit.parentCount} parents</span>
                 </div>
               </div>
             </article>
@@ -241,8 +311,8 @@ function OperationsPanel({
       <div className="operation-block commit-detail" id="commit-detail">
         <div className="block-heading">
           <GitCompareArrows aria-hidden="true" />
-          <span>Commit Detail / 提交详情</span>
-          <StatusPill tone="info">changes JSON / 变更 JSON</StatusPill>
+          <span>Commit detail</span>
+          <StatusPill tone="info">changes JSON</StatusPill>
         </div>
         <div className="commit-detail__summary">
           <div className="commit-detail__title">
@@ -268,7 +338,7 @@ function OperationsPanel({
       <div className="operation-block" id="components">
         <div className="block-heading">
           <Fingerprint aria-hidden="true" />
-          <span>Component Inventory / 组件清单</span>
+          <span>Component inventory</span>
           <StatusPill tone="info">{operations.componentCount} items</StatusPill>
         </div>
         <StackTable
@@ -281,8 +351,8 @@ function OperationsPanel({
       <div className="operation-block component-detail" id="component-detail">
         <div className="block-heading">
           <Braces aria-hidden="true" />
-          <span>Component Detail / 组件详情</span>
-          <StatusPill tone="warning">metadata only / 仅元数据</StatusPill>
+          <span>Component detail</span>
+          <StatusPill tone="warning">metadata only</StatusPill>
         </div>
         <div className="component-detail__summary">
           <div className="component-detail__title">
@@ -312,7 +382,7 @@ function OperationsPanel({
       <div className="operation-block" id="evaluation">
         <div className="block-heading">
           <LineChart aria-hidden="true" />
-          <span>Evaluation Runs / 评测运行</span>
+          <span>Evaluation runs</span>
         </div>
         <StackTable aria-label="Evaluation runs" headers={["Suite", "Model", "Metrics"]} rows={evaluationRows} />
       </div>
@@ -320,8 +390,8 @@ function OperationsPanel({
       <div className="operation-block evaluation-detail" id="evaluation-detail">
         <div className="block-heading">
           <LineChart aria-hidden="true" />
-          <span>Evaluation Run Detail / 评测详情</span>
-          <StatusPill tone="info">metrics JSON / 指标 JSON</StatusPill>
+          <span>Evaluation run detail</span>
+          <StatusPill tone="info">metrics JSON</StatusPill>
         </div>
         {operations.evaluationDetail ? (
           <>
@@ -349,7 +419,7 @@ function OperationsPanel({
           </>
         ) : (
           <div className="evaluation-detail__empty">
-            <StatusPill tone="neutral">No detail / 暂无详情</StatusPill>
+            <StatusPill tone="neutral">No detail</StatusPill>
             <p>
               Live data has no selected evaluation metrics detail to inspect, and preview metrics
               are not substituted. 当前 live data 没有可检查的 selected evaluation metrics detail；不会替换为
@@ -439,7 +509,19 @@ export function ContextWorkspaceScreen({ localLifecycleEnabled = false, mergeRev
       <WorkspaceSidebar source={props.source} />
 
       <section className="main-surface" id="workspace">
-        <WorkspaceHeader title={props.workspace.title} />
+        <WorkspaceHeader
+          title={props.workspace.title}
+          description={props.workspace.description}
+          project={
+            props.workspace.contextFacts.find((fact) => fact.id === "project-id")?.value ?? "Project"
+          }
+        />
+
+        <WorkspaceMetrics
+          componentCount={props.operations.componentCount}
+          commitCount={props.operations.commits.length}
+          evaluationCount={props.operations.evaluationRuns.length}
+        />
 
         <div className="workspace-grid">
           <ContextDetailPanel workspace={props.workspace} />
@@ -453,6 +535,7 @@ export function ContextWorkspaceScreen({ localLifecycleEnabled = false, mergeRev
         <section
           className="benchmark-workspace-region"
           aria-label="Local benchmark workspace / 本地 Benchmark 工作台"
+          id="benchmark-workspace"
         >
           <LocalBenchmarkWorkspaceInspector
             candidates={props.operations.benchmarkEvidence.candidates}
